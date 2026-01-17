@@ -64,7 +64,7 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
       setAnswered(false);
       setTimeLeft(questionTimeLimit);
     }
-  }, [currentObstacle, questionTimeLimit]);
+  }, [currentObstacle, questionTimeLimit, answered]);
 
   // Smoothly animate displayed percent towards actual percent (fake loading effect)
   useEffect(() => {
