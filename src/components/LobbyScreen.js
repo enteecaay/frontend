@@ -16,7 +16,7 @@ function LobbyScreen({ onJoinGame, onStartGame, players, playerData, socket, ava
     // Tự động load rooms từ API mỗi 2 giây
     if (socket) {
       const interval = setInterval(() => {
-        fetch('http://localhost:5000/api/rooms')
+        fetch(`${process.env.REACT_APP_SOCKET_URL}/api/rooms`)
           .then(res => res.json())
           .then(data => {
             const waitingRooms = data.filter(r => r.state === 'waiting');

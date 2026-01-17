@@ -17,6 +17,7 @@ function AppContent() {
   const [players, setPlayers] = useState([]);
   const [currentObstacle, setCurrentObstacle] = useState(null);
   const [targetScore, setTargetScore] = useState(100);
+  const [questionTimeLimit, setQuestionTimeLimit] = useState(30);
   const [availableRooms, setAvailableRooms] = useState([]);
   const [allPlayers, setAllPlayers] = useState({});
 
@@ -44,6 +45,7 @@ function AppContent() {
       setScreenState('playing');
       setCurrentObstacle(data.currentObstacle);
       setTargetScore(data.targetScore || 100);
+      setQuestionTimeLimit(data.questionTimeLimit || 30);
     });
 
     newSocket.on('admin_race_started', (data) => {
@@ -111,7 +113,7 @@ function AppContent() {
 
   const loadAvailableRooms = () => {
     // Load rooms from API
-    fetch('http://localhost:5000/api/rooms')
+    fetch(`${process.env.REACT_APP_SOCKET_URL}/api/rooms`)
       .then(res => res.json())
       .then(rooms => {
         const waitingRooms = rooms.filter(r => r.state === 'waiting');
@@ -135,9 +137,9 @@ function AppContent() {
     }
   };
 
-  const handleAnswerQuestion = (questionId, answer) => {
+  const handleAnswerQuestion = (questionId, answer, isTimeout = false) => {
     if (socket) {
-      socket.emit('answer_question', { roomId, questionId, answer });
+      socket.emit('answer_question', { roomId, questionId, answer, isTimeout });
     }
   };
 
@@ -198,6 +200,7 @@ function AppContent() {
                 roomId={roomId}
                 allPlayers={allPlayers}
                 targetScore={targetScore}
+                questionTimeLimit={questionTimeLimit}
               />
             )}
             {screenState === 'gameOver' && playerData && (

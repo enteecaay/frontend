@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import './GameScreen.css';
 
-function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGameOver, socket, roomId, allPlayers, targetScore = 100 }) {
-  const [timeLeft, setTimeLeft] = useState(30);
+function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGameOver, socket, roomId, allPlayers, targetScore = 100, questionTimeLimit = 30 }) {
+  const [timeLeft, setTimeLeft] = useState(questionTimeLimit);
   const [answered, setAnswered] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [displayPercent, setDisplayPercent] = useState(0);
 
   useEffect(() => {
     if (socket) {
+      socket.on('race_started', (data) => {
+        // Cập nhật questionTimeLimit khi race bắt đầu
+        setTimeLeft(data.questionTimeLimit || 30);
+      });
+
       socket.on('race_leaderboard_update', (data) => {
         setTimeRemaining(data.timeRemaining);
         // Update local player's score each tick to reflect server scoring (points/sec = speed)
@@ -25,6 +30,7 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
       });
 
       return () => {
+        socket.off('race_started');
         socket.off('race_leaderboard_update');
         socket.off('race_finished');
       };
@@ -38,6 +44,10 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
         setTimeLeft(prev => {
           if (prev <= 1) {
             setAnswered(true);
+            // Gửi timeout signal đến server
+            if (currentObstacle) {
+              onAnswerQuestion(currentObstacle.question.id, -1, true); // -1 = không có đáp án, true = timeout
+            }
             return 0;
           }
           return prev - 1;
@@ -46,7 +56,15 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
 
       return () => clearInterval(timer);
     }
-  }, [answered]);
+  }, [answered, currentObstacle, onAnswerQuestion]);
+
+  // Khi nhận câu hỏi mới từ parent (App.js qua next_obstacle event), reset state
+  useEffect(() => {
+    if (currentObstacle && answered) {
+      setAnswered(false);
+      setTimeLeft(questionTimeLimit);
+    }
+  }, [currentObstacle, questionTimeLimit]);
 
   // Smoothly animate displayed percent towards actual percent (fake loading effect)
   useEffect(() => {
@@ -65,15 +83,9 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
 
   const handleAnswer = (optionIndex) => {
     if (!answered && currentObstacle) {
-      onAnswerQuestion(currentObstacle.question.id, optionIndex);
+      onAnswerQuestion(currentObstacle.question.id, optionIndex, false); // false = không timeout
       setAnswered(true);
       setTimeLeft(0);
-      
-      // Reset for next question
-      setTimeout(() => {
-        setAnswered(false);
-        setTimeLeft(30);
-      }, 2000);
     }
   };
 

@@ -8,6 +8,7 @@ function AdminScreen({ socket, onLogout }) {
   const [speedDecrement, setSpeedDecrement] = useState(0.2);
   const [timeLimit, setTimeLimit] = useState(600);
   const [maxPlayers, setMaxPlayers] = useState(10);
+  const [questionTimeLimit, setQuestionTimeLimit] = useState(30);
   const [rooms, setRooms] = useState([]);
   const [racingRooms, setRacingRooms] = useState({});
 
@@ -74,7 +75,8 @@ function AdminScreen({ socket, onLogout }) {
         speedIncrement: parseFloat(speedIncrement),
         speedDecrement: parseFloat(speedDecrement),
         timeLimit: parseInt(timeLimit),
-        maxPlayers: parseInt(maxPlayers)
+        maxPlayers: parseInt(maxPlayers),
+        questionTimeLimit: parseInt(questionTimeLimit)
       });
       
       setRoomName('Cuộc Đua Lái Thuyền Cách Mạng');
@@ -83,6 +85,7 @@ function AdminScreen({ socket, onLogout }) {
       setSpeedDecrement(0.2);
       setTimeLimit(600);
       setMaxPlayers(10);
+      setQuestionTimeLimit(30);
     }
   };
 
@@ -177,6 +180,17 @@ function AdminScreen({ socket, onLogout }) {
                 onChange={(e) => setMaxPlayers(e.target.value)}
                 min="2"
                 max="20"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Thời Gian Trả Lời Câu Hỏi (giây):</label>
+              <input
+                type="number"
+                value={questionTimeLimit}
+                onChange={(e) => setQuestionTimeLimit(e.target.value)}
+                min="5"
+                max="120"
               />
             </div>
           </div>
