@@ -5,8 +5,7 @@ node_modules/
 build/
 dist/
 
-# Environment variables
-.env
+# Environment variables (local only - .env.example is tracked)
 .env.local
 .env.development.local
 .env.test.local

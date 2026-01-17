@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import './AdminScreen.css';
 
 function AdminScreen({ socket, onLogout }) {
-  const [adminId, setAdminId] = useState(null);
   const [roomName, setRoomName] = useState('Cuộc Đua Lái Thuyền Cách Mạng');
   const [targetScore, setTargetScore] = useState(100);
   const [speedIncrement, setSpeedIncrement] = useState(0.3);
@@ -10,15 +9,12 @@ function AdminScreen({ socket, onLogout }) {
   const [timeLimit, setTimeLimit] = useState(600);
   const [maxPlayers, setMaxPlayers] = useState(10);
   const [rooms, setRooms] = useState([]);
-  const [selectedRoom, setSelectedRoom] = useState(null);
-  const [roomDetails, setRoomDetails] = useState(null);
   const [racingRooms, setRacingRooms] = useState({});
 
   useEffect(() => {
     if (!socket) return;
 
     socket.on('admin_login_success', (data) => {
-      setAdminId(data.adminId);
       console.log('Admin logged in:', data);
     });
 
@@ -61,6 +57,7 @@ function AdminScreen({ socket, onLogout }) {
       socket.off('race_leaderboard_update');
       socket.off('room_deleted');
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket]);
 
   const loadRooms = () => {

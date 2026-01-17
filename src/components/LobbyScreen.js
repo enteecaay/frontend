@@ -36,9 +36,7 @@ function LobbyScreen({ onJoinGame, onStartGame, players, playerData, socket, ava
     }
   };
 
-  const handleStart = () => {
-    onStartGame();
-  };
+
 
   return (
     <div className="lobby-container">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import './App.css';
 import AdminLoginScreen from './components/AdminLoginScreen';
@@ -21,8 +21,9 @@ function AppContent() {
   const [allPlayers, setAllPlayers] = useState({});
 
   useEffect(() => {
-    // Connect to backend
-    const newSocket = io('http://localhost:5000', {
+    // Connect to backend using env variable
+    const socketUrl = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
+    const newSocket = io(socketUrl, {
       transports: ['websocket', 'polling']
     });
 
@@ -152,8 +153,6 @@ function AppContent() {
     setCurrentObstacle(null);
     setAllPlayers({});
   };
-
-  const location = useLocation();
 
   // Render based on route
   return (

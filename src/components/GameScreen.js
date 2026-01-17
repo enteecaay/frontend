@@ -4,8 +4,6 @@ import './GameScreen.css';
 function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGameOver, socket, roomId, allPlayers, targetScore = 100 }) {
   const [timeLeft, setTimeLeft] = useState(30);
   const [answered, setAnswered] = useState(false);
-  const [raceStats, setRaceStats] = useState({});
-  const [gameFinished, setGameFinished] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [displayPercent, setDisplayPercent] = useState(0);
 
@@ -23,7 +21,6 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
       });
 
       socket.on('race_finished', (data) => {
-        setGameFinished(true);
         onGameOver();
       });
 
@@ -32,6 +29,7 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
         socket.off('race_finished');
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket, onGameOver]);
 
   useEffect(() => {
