@@ -3,10 +3,11 @@ import './GameOverScreen.css';
 
 function GameOverScreen({ score, playerData, onReturnToLobby }) {
   const finalMorale = playerData.morale || 0;
-  const rank = score >= 2000 ? '🏆 Tướng Lĩnh' : 
-               score >= 1500 ? '🎖️ Anh Hùng' :
-               score >= 1000 ? '⭐ Chiến Sĩ' :
-               score >= 500 ? '💪 Quân Nhân' : '🌱 Tân Binh';
+  const eliminationReason = playerData.eliminationReason || null;
+  // const rank = score >= 2000 ? '🏆 Tướng Lĩnh' : 
+  //              score >= 1500 ? '🎖️ Anh Hùng' :
+  //              score >= 1000 ? '⭐ Chiến Sĩ' :
+  //              score >= 500 ? '💪 Quân Nhân' : '🌱 Tân Binh';
 
   const finalStandings = playerData.finalStandings || [];
 
@@ -15,9 +16,11 @@ function GameOverScreen({ score, playerData, onReturnToLobby }) {
       <div className="gameover-content">
         <div className="gameover-header">
           <h1 className="gameover-title">
-            {finalMorale > 50 ? '✅ CUỘC ĐUA KẾT THÚC' : '⏁ CUỘC ĐUA KẾT THÚC'}
+            {eliminationReason ? '⚠️ BẠN ĐÃ BỊ LOẠI' : (finalMorale > 50 ? '✅ CUỘC ĐUA KẾT THÚC' : '⏁ CUỘC ĐUA KẾT THÚC')}
           </h1>
-          <p className="gameover-subtitle">Kết Quả Chung Cuộc</p>
+          <p className="gameover-subtitle">
+            {eliminationReason ? eliminationReason : 'Kết Quả Chung Cuộc'}
+          </p>
         </div>
 
         <div className="results-section">
@@ -27,18 +30,8 @@ function GameOverScreen({ score, playerData, onReturnToLobby }) {
           </div>
 
           <div className="result-box">
-            <span className="result-label">⭐ Điểm số:</span>
-            <span className="result-value highlight">{score}</span>
-          </div>
-
-          <div className="result-box">
             <span className="result-label">🏁 Điểm đạt được:</span>
             <span className="result-value">{Math.round(playerData.score || 0)}</span>
-          </div>
-
-          <div className="result-box">
-            <span className="result-label">🏅 Xếp hạng:</span>
-            <span className="result-value rank">{rank}</span>
           </div>
         </div>
 
@@ -102,7 +95,6 @@ function GameOverScreen({ score, playerData, onReturnToLobby }) {
           {finalMorale <= 20 && (
             <div className="message-bad">
               ⚠️ Con thuyền đã gặp khó khăn!<br/>
-              Hãy ôn lại kiến thức về Chương IV và thử lại!
             </div>
           )}
         </div>

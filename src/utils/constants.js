@@ -1,7 +1,7 @@
 // Game constants
 export const GAME_CONFIG = {
   INITIAL_MORALE: 100,
-  INITIAL_SPEED: 1,
+  INITIAL_SPEED: 0.1,
   MAX_MORALE: 100,
   MIN_MORALE: 0,
   MAX_SPEED: 2,

@@ -6,6 +6,7 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
   const [answered, setAnswered] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [displayPercent, setDisplayPercent] = useState(0);
+  const [leaderboard, setLeaderboard] = useState([]);
 
   useEffect(() => {
     if (socket) {
@@ -16,6 +17,7 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
 
       socket.on('race_leaderboard_update', (data) => {
         setTimeRemaining(data.timeRemaining);
+        setLeaderboard(data.leaderboard || []);
         // Update local player's score each tick to reflect server scoring (points/sec = speed)
         const me = data.leaderboard?.find(entry => entry.id === socket.id);
         if (me) {
@@ -112,14 +114,14 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
       </div>
 
       {/* Race Info Header */}
-      <div className="race-info-header">
+      {/* <div className="race-info-header">
         <div className="time-remaining">
           <span className="label">⏰ Thời gian còn lại:</span>
           <span className={`value ${timeRemaining < 30 ? 'danger' : ''}`}>
             {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
           </span>
         </div>
-      </div>
+      </div> */}
 
       {/* Game Canvas - River and Boat */}
       <div className="game-canvas">
@@ -145,21 +147,33 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
         {/* Finish line reveals from right to left when 90%+ */}
         <div className={`finish-line ${displayPercent >= 90 ? 'reveal' : ''}`}></div>
 
-        {/* Boat Position reflects score percentage */}
-        <div 
-          className="boat-container"
-          style={{ left: `${Math.min(100, displayPercent)}%` }}
-        >
-          <div className="boat">⛵</div>
-          <div className="morale-bar">
+        {/* All Players' Boats */}
+        {leaderboard.map((player, index) => {
+          const playerPercent = Math.min(100, (player.score / targetScore) * 100);
+          const isCurrentPlayer = player.id === socket?.id;
+          
+          return (
             <div 
-              className="morale-fill"
-              style={{ width: `${playerData.morale}%` }}
-            ></div>
-          </div>
-        </div>
+              key={player.id}
+              className={`boat-container ${isCurrentPlayer ? 'current-player' : ''}`}
+              style={{ 
+                left: `${Math.min(100, playerPercent)}%`,
+                top: `${30 + (index * 15)}%`
+              }}
+            >
+              <div className="player-name">{player.name}</div>
+              <div className="boat">⛵</div>
+              <div className="morale-bar">
+                <div 
+                  className="morale-fill"
+                  style={{ width: `${player.morale || 100}%` }}
+                ></div>
+              </div>
+            </div>
+          );
+        })}
 
-        {/* Obstacles on River */}
+        {/* Obstacles on River
         {currentObstacle && (
           <div className="obstacle-container">
             <div className="obstacle" title={currentObstacle.name}>
@@ -167,7 +181,7 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
             </div>
             <p className="obstacle-name">{currentObstacle.name}</p>
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Question Section */}

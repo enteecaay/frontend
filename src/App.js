@@ -86,6 +86,31 @@ function AppContent() {
       setPlayers(data.players);
     });
 
+    newSocket.on('player_eliminated', (data) => {
+      // Hiển thị thông báo người chơi bị loại
+      console.log(`${data.playerName} đã bị loại! Lý do: ${data.reason}`);
+      console.log(`Còn lại ${data.remainingPlayers} người chơi trong cuộc đua`);
+      
+      // Cập nhật danh sách người chơi còn lại
+      if (data.remainingPlayersList) {
+        setPlayers(data.remainingPlayersList.map(p => ({
+          id: p.id,
+          name: p.name
+        })));
+      }
+    });
+
+    newSocket.on('game_over', (data) => {
+      // Kết thúc game cho người chơi này
+      setPlayerData(prev => ({
+        ...prev,
+        score: data.finalScore,
+        morale: data.finalMorale,
+        eliminationReason: data.reason
+      }));
+      setScreenState('gameOver');
+    });
+
     newSocket.on('race_finished', (data) => {
       setPlayerData(prev => ({
         ...prev,
