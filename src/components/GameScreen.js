@@ -4,7 +4,6 @@ import './GameScreen.css';
 function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGameOver, socket, roomId, allPlayers, targetScore = 100, questionTimeLimit = 30 }) {
   const [timeLeft, setTimeLeft] = useState(questionTimeLimit);
   const [answered, setAnswered] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(0);
   const [displayPercent, setDisplayPercent] = useState(0);
   const [leaderboard, setLeaderboard] = useState([]);
 
@@ -16,7 +15,6 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
       });
 
       socket.on('race_leaderboard_update', (data) => {
-        setTimeRemaining(data.timeRemaining);
         setLeaderboard(data.leaderboard || []);
         // Update local player's score each tick to reflect server scoring (points/sec = speed)
         const me = data.leaderboard?.find(entry => entry.id === socket.id);
