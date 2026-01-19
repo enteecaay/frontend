@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './LobbyScreen.css';
 
-function LobbyScreen({ onJoinGame, onStartGame, players, playerData, socket, availableRooms }) {
+function LobbyScreen({ onJoinGame, onStartGame, players, playerData, socket, availableRooms, onShowAIUsage }) {
   const [playerName, setPlayerName] = useState('');
   const [joined, setJoined] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -134,7 +134,16 @@ function LobbyScreen({ onJoinGame, onStartGame, players, playerData, socket, ava
             <p className="waiting-message">⏳ Đang chờ admin bắt đầu cuộc đua...</p>
           </div>
         )}
+        <div className="ai-usage-button">
+              <button 
+                className="btn btn-secondary" 
+                onClick={onShowAIUsage}
+              >
+                📊 AI Usage
+              </button>
+            </div>
       </div>
+      
 
       <div className="lobby-decoration">
         <div className="stars"></div>

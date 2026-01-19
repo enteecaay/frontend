@@ -190,6 +190,22 @@
   box-shadow: 0 0 40px rgba(16, 185, 129, 0.8);
 }
 
+.btn-secondary {
+  background: linear-gradient(45deg, #6b7280, #4b5563);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(107, 114, 128, 0.5);
+}
+
+.btn-secondary:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 40px rgba(107, 114, 128, 0.8);
+}
+
+.ai-usage-button {
+  text-align: center;
+  margin-top: 20px;
+}
+
 .welcome-text {
   font-size: 1.5em;
   color: #fcd34d;
