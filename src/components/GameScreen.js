@@ -4,8 +4,15 @@ import './GameScreen.css';
 function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGameOver, socket, roomId, allPlayers, targetScore = 100, questionTimeLimit = 30 }) {
   const [timeLeft, setTimeLeft] = useState(questionTimeLimit);
   const [answered, setAnswered] = useState(false);
-  const [displayPercent, setDisplayPercent] = useState(0);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [shopTimeLeft, setShopTimeLeft] = useState(0);
+  const [shopItems, setShopItems] = useState([]);
+  const [inventory, setInventory] = useState([]);
+  const [shopLocked, setShopLocked] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [treasureModal, setTreasureModal] = useState(null);
+  const [targetSelectionModal, setTargetSelectionModal] = useState(null);
 
   useEffect(() => {
     if (socket) {
@@ -29,10 +36,71 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
         onGameOver();
       });
 
+      socket.on('shop_opened', (data) => {
+        if (!shopLocked) {
+          setShopOpen(true);
+          setShopTimeLeft(data.timeLimit);
+          setShopItems(data.shopItems || []);
+        }
+      });
+
+      socket.on('close_shop', () => {
+        setShopOpen(false);
+      });
+
+      socket.on('global_notification', (data) => {
+        const id = Date.now();
+        setNotifications(prev => [...prev, { ...data, id }]);
+        setTimeout(() => {
+          setNotifications(prev => prev.filter(n => n.id !== id));
+        }, 4000);
+      });
+
+      socket.on('treasure_opened', (data) => {
+        setTreasureModal(data.treasure);
+        setTimeout(() => {
+          setTreasureModal(null);
+        }, 3000);
+      });
+
+      socket.on('need_target', (data) => {
+        const visiblePlayers = leaderboard.filter(p => {
+          const myScore = leaderboard.find(pl => pl.id === socket?.id)?.score || 0;
+          return p.id !== socket?.id && Math.abs(p.score - myScore) <= 50;
+        });
+        
+        setTargetSelectionModal({
+          itemId: data.itemId,
+          itemName: data.itemName,
+          targets: visiblePlayers
+        });
+      });
+
+      socket.on('item_purchased', (data) => {
+        setInventory(data.inventory);
+        playerData.score = data.newScore;
+      });
+
+      socket.on('player_bought_item', (data) => {
+        console.log(`${data.playerName} vừa mua ${data.itemIcon} ${data.itemName}`);
+      });
+
+      socket.on('shop_unlocked', () => {
+        setShopLocked(false);
+      });
+
       return () => {
         socket.off('race_started');
         socket.off('race_leaderboard_update');
         socket.off('race_finished');
+        socket.off('shop_opened');
+        socket.off('close_shop');
+        socket.off('global_notification');
+        socket.off('treasure_opened');
+        socket.off('need_target');
+        socket.off('item_purchased');
+        socket.off('player_bought_item');
+        socket.off('shop_unlocked');
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -66,20 +134,21 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
     }
   }, [currentObstacle, questionTimeLimit, answered]);
 
-  // Smoothly animate displayed percent towards actual percent (fake loading effect)
+  // Shop countdown timer
   useEffect(() => {
-    const actualPercent = Math.min(100, (playerData.score / targetScore) * 100);
-    const anim = setInterval(() => {
-      setDisplayPercent(prev => {
-        const diff = actualPercent - prev;
-        if (Math.abs(diff) < 0.5) return actualPercent; // snap when close
-        return prev + diff * 0.2; // ease towards target
-      });
-    }, 100);
-    return () => clearInterval(anim);
-  }, [playerData.score, targetScore]);
-
-  // Removed position auto-updates; scoring handled server-side
+    if (shopOpen && shopTimeLeft > 0) {
+      const timer = setInterval(() => {
+        setShopTimeLeft(prev => {
+          if (prev <= 1) {
+            setShopOpen(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [shopOpen, shopTimeLeft]);
 
   const handleAnswer = (optionIndex) => {
     if (!answered && currentObstacle) {
@@ -107,7 +176,7 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
         </div>
         <div className="stat-box">
           <span className="stat-label">🏁 Điểm:</span>
-          <span className="stat-value">{Math.round(playerData.score)} / {targetScore}</span>
+          <span className="stat-value">{Math.round(playerData.score)}</span>
         </div>
       </div>
 
@@ -129,33 +198,39 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
           <div className="wave wave-3"></div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="progress-bar-container">
-          {(() => {
-            const percent = Math.min(100, Math.round(displayPercent));
-            return (
-              <>
-                <div className="progress-bar-fill" style={{ width: `${percent}%` }}></div>
-                <span className="progress-text">{percent}%</span>
-              </>
-            );
-          })()}
-        </div>
-
-        {/* Finish line reveals from right to left when 90%+ */}
-        <div className={`finish-line ${displayPercent >= 90 ? 'reveal' : ''}`}></div>
-
         {/* All Players' Boats */}
         {leaderboard.map((player, index) => {
-          const playerPercent = Math.min(100, (player.score / targetScore) * 100);
           const isCurrentPlayer = player.id === socket?.id;
+          const myScore = leaderboard.find(p => p.id === socket?.id)?.score || 0;
+          
+          // Chỉ hiển thị nếu là bản thân hoặc chênh lệch dưới 50 điểm
+          if (!isCurrentPlayer && Math.abs(player.score - myScore) > 50) {
+            return null;
+          }
+          
+          let position;
+          const threshold = 25; // Điểm để đạt giữa màn hình
+          
+          if (myScore < threshold) {
+            // Giai đoạn đầu: tất cả thuyền di chuyển từ trái dựa trên điểm tuyệt đối
+            position = (player.score / threshold) * 50;
+          } else {
+            // Sau khi thuyền tôi đạt giữa màn hình
+            if (isCurrentPlayer) {
+              position = 50; // Khóa ở giữa
+            } else {
+              // Thuyền khác: vị trí tương đối
+              const scoreDiff = player.score - myScore;
+              position = 50 + (scoreDiff / 50) * 50;
+            }
+          }
           
           return (
             <div 
               key={player.id}
               className={`boat-container ${isCurrentPlayer ? 'current-player' : ''}`}
               style={{ 
-                left: `${Math.min(100, playerPercent)}%`,
+                left: `${position}%`,
                 top: `${30 + (index * 15)}%`
               }}
             >
@@ -223,6 +298,168 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
       {currentObstacle && (
         <div className="category-tag">
           📚 {currentObstacle.question.category}
+        </div>
+      )}
+
+      {/* Shop Modal */}
+      {shopOpen && (
+        <div className="shop-modal-overlay">
+          <div className="shop-modal">
+            <div className="shop-header">
+              <h2>🏪 Cửa hàng vật phẩm</h2>
+              <span className="shop-timer">
+                ⏱️ {shopTimeLeft}s
+              </span>
+            </div>
+
+            <div className="shop-grid">
+              {shopItems.map(item => (
+                <button
+                  key={item.id}
+                  className="shop-item-card"
+                  onClick={() => {
+                    if (playerData.score >= item.cost) {
+                      socket?.emit('buy_item', {
+                        roomId,
+                        itemId: item.id
+                      });
+                    }
+                  }}
+                  disabled={playerData.score < item.cost || shopLocked}
+                >
+                  <div className="item-icon">{item.icon}</div>
+                  <div className="item-name">{item.name}</div>
+                  <div className="item-cost">
+                    💰 {item.cost} điểm
+                  </div>
+                  <div className="item-description">
+                    {item.description}
+                  </div>
+                  {playerData.score < item.cost && (
+                    <div className="insufficient-score">
+                      Không đủ điểm
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Inventory */}
+            {inventory.length > 0 && (
+              <div className="inventory-section">
+                <h3>📦 Hành trang</h3>
+                <div className="inventory-grid">
+                  {inventory.map((item, idx) => (
+                    <button
+                      key={idx}
+                      className="inventory-item"
+                      onClick={() => {
+                        socket?.emit('use_item', {
+                          roomId,
+                          inventoryIndex: idx
+                        });
+                      }}
+                    >
+                      <div className="item-icon">{item.icon}</div>
+                      <div className="item-name">{item.name}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {shopLocked && (
+              <div className="shop-locked-warning">
+                🔐 Shop đã bị khóa
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Notifications */}
+      <div className="notifications-container">
+        {notifications.map(notif => (
+          <div key={notif.id} className={`notification notification-${notif.type}`}>
+            {notif.message}
+          </div>
+        ))}
+      </div>
+
+      {/* Treasure Modal */}
+      {treasureModal && (
+        <div className="shop-modal-overlay">
+          <div className="treasure-modal">
+            <h2>🎁 Rương báu!</h2>
+            <div className="treasure-content">
+              {treasureModal.type === 'positive' ? (
+                <>
+                  <div className="treasure-icon">✨</div>
+                  <p className="treasure-message">Bạn nhận được: {treasureModal.content.name}</p>
+                  <p className="treasure-description">{treasureModal.content.description}</p>
+                </>
+              ) : (
+                <>
+                  <div className="treasure-icon">💀</div>
+                  <p className="treasure-message danger">{treasureModal.content.name}</p>
+                  <p className="treasure-description">{treasureModal.content.description}</p>
+                  
+                  {/* Chi tiết hiệu ứng */}
+                  <div className="treasure-effects">
+                    {treasureModal.content.effect.resetSpeed && (
+                      <div className="effect-item">
+                        ⚡ Tốc độ reset về 0.1
+                      </div>
+                    )}
+                    {treasureModal.content.effect.scorePenalty && (
+                      <div className="effect-item">
+                        💔 Mất {treasureModal.content.effect.scorePenalty} điểm
+                      </div>
+                    )}
+                    {treasureModal.content.effect.lockShop && (
+                      <div className="effect-item">
+                        🔐 Shop bị khóa {treasureModal.content.duration / 1000}s
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Target Selection Modal */}
+      {targetSelectionModal && (
+        <div className="shop-modal-overlay">
+          <div className="target-selection-modal">
+            <h2>🎯 Chọn mục tiêu cho {targetSelectionModal.itemName}</h2>
+            <div className="target-grid">
+              {targetSelectionModal.targets.map(target => (
+                <button
+                  key={target.id}
+                  className="target-card"
+                  onClick={() => {
+                    socket?.emit('buy_item', {
+                      roomId,
+                      itemId: targetSelectionModal.itemId,
+                      targetPlayerId: target.id
+                    });
+                    setTargetSelectionModal(null);
+                  }}
+                >
+                  <div className="target-name">⛵ {target.name}</div>
+                  <div className="target-score">💰 {Math.round(target.score)} điểm</div>
+                </button>
+              ))}
+            </div>
+            <button 
+              className="cancel-target-btn"
+              onClick={() => setTargetSelectionModal(null)}
+            >
+              Hủy
+            </button>
+          </div>
         </div>
       )}
     </div>

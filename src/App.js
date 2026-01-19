@@ -159,7 +159,7 @@ function AppContent() {
       setPlayerData({
         name: playerName,
         morale: 100,
-        speed: 1,
+        speed: 0.1,
         position: 0,
         health: 100,
         score: 0,
