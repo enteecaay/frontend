@@ -16,8 +16,9 @@
   padding: 60px 80px;
   max-width: 700px;
   width: 90%;
-  box-shadow: 0 0 40px rgba(251, 191, 36, 0.5),
-              inset 0 0 20px rgba(251, 191, 36, 0.1);
+  box-shadow:
+    0 0 40px rgba(251, 191, 36, 0.5),
+    inset 0 0 20px rgba(251, 191, 36, 0.1);
   position: relative;
   z-index: 10;
   animation: slideIn 0.8s ease-out;
@@ -44,7 +45,9 @@
 .game-title {
   font-size: 3.5em;
   font-weight: bold;
-  text-shadow: 0 0 20px #fbbf24, 0 0 40px #f59e0b;
+  text-shadow:
+    0 0 20px #fbbf24,
+    0 0 40px #f59e0b;
   color: #fcd34d;
   margin-bottom: 10px;
   letter-spacing: 3px;
@@ -110,7 +113,7 @@
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   transition: all 0.3s ease;
 }
 
@@ -155,7 +158,7 @@
   letter-spacing: 2px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
 }
 
 .btn:disabled {
@@ -202,8 +205,16 @@
 }
 
 .ai-usage-button {
-  text-align: center;
+  display: flex;
+  gap: 15px;
+  justify-content: center;
   margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.ai-usage-button button {
+  flex: 1;
+  min-width: 150px;
 }
 
 .welcome-text {
@@ -232,8 +243,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .players-list {
