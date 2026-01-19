@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import './App.css';
+import Navbar from './components/Navbar';
+import HomeScreen from './components/HomeScreen';
 import AdminLoginScreen from './components/AdminLoginScreen';
 import AdminScreen from './components/AdminScreen';
 import LobbyScreen from './components/LobbyScreen';
 import GameScreen from './components/GameScreen';
 import GameOverScreen from './components/GameOverScreen';
+import PartyIdeology from './components/PartyIdeology';
 
 function AppContent() {
   const [socket, setSocket] = useState(null);
@@ -185,6 +188,9 @@ function AppContent() {
   return (
     <div className="App">
       <Routes>
+        {/* Home Route */}
+        <Route path="/" element={<HomeScreen />} />
+
         {/* Admin Route */}
         <Route path="/admin" element={
           <>
@@ -202,8 +208,11 @@ function AppContent() {
           </>
         } />
 
-        {/* Player Routes */}
-        <Route path="/" element={
+        {/* Party Ideology Route */}
+        <Route path="/ideology" element={<PartyIdeology />} />
+
+        {/* Game Route */}
+        <Route path="/game" element={
           <>
             {screenState === 'lobby' && (
               <LobbyScreen 
@@ -245,6 +254,7 @@ function AppContent() {
 function App() {
   return (
     <Router>
+      <Navbar />
       <AppContent />
     </Router>
   );
