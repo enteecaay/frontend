@@ -3,7 +3,6 @@ import './AdminScreen.css';
 
 function AdminScreen({ socket, onLogout }) {
   const [roomName, setRoomName] = useState('Cuộc Đua Lái Thuyền Cách Mạng');
-  const [targetScore, setTargetScore] = useState(100);
   const [speedIncrement, setSpeedIncrement] = useState(0.3);
   const [speedDecrement, setSpeedDecrement] = useState(0.2);
   const [timeLimit, setTimeLimit] = useState(600);
@@ -71,7 +70,6 @@ function AdminScreen({ socket, onLogout }) {
     if (socket && roomName.trim()) {
       socket.emit('create_race_room', {
         roomName,
-        targetScore: parseInt(targetScore),
         speedIncrement: parseFloat(speedIncrement),
         speedDecrement: parseFloat(speedDecrement),
         timeLimit: parseInt(timeLimit),
@@ -80,7 +78,6 @@ function AdminScreen({ socket, onLogout }) {
       });
       
       setRoomName('Cuộc Đua Lái Thuyền Cách Mạng');
-      setTargetScore(100);
       setSpeedIncrement(0.3);
       setSpeedDecrement(0.2);
       setTimeLimit(600);
@@ -126,17 +123,6 @@ function AdminScreen({ socket, onLogout }) {
           </div>
 
           <div className="form-row">
-            <div className="form-group">
-              <label>Điểm Cần Đạt Để Thắng:</label>
-              <input
-                type="number"
-                value={targetScore}
-                onChange={(e) => setTargetScore(e.target.value)}
-                min="10"
-                max="1000"
-              />
-            </div>
-
             <div className="form-group">
               <label>Tốc Độ Tăng (Trả Lời Đúng):</label>
               <input

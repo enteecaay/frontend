@@ -4,8 +4,20 @@ import './GameScreen.css';
 function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGameOver, socket, roomId, allPlayers, targetScore = 100, questionTimeLimit = 30 }) {
   const [timeLeft, setTimeLeft] = useState(questionTimeLimit);
   const [answered, setAnswered] = useState(false);
-  const [displayPercent, setDisplayPercent] = useState(0);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [shopTimeLeft, setShopTimeLeft] = useState(0);
+  const [shopItems, setShopItems] = useState([]);
+  const [inventory, setInventory] = useState([]);
+  const [shopLocked, setShopLocked] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [treasureModal, setTreasureModal] = useState(null);
+  const [targetSelectionModal, setTargetSelectionModal] = useState(null);
+  const [targetTimeLeft, setTargetTimeLeft] = useState(0);
+  const [questionLocked, setQuestionLocked] = useState(false);
+  const [currentPlayerSpeed, setCurrentPlayerSpeed] = useState(playerData?.speed || 0.1);
+  const [currentPlayerMorale, setCurrentPlayerMorale] = useState(playerData?.morale || 100);
+  const [currentPlayerScore, setCurrentPlayerScore] = useState(playerData?.score || 0);
 
   useEffect(() => {
     if (socket) {
@@ -16,23 +28,105 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
 
       socket.on('race_leaderboard_update', (data) => {
         setLeaderboard(data.leaderboard || []);
-        // Update local player's score each tick to reflect server scoring (points/sec = speed)
+        // Update local player's speed, morale, and score from leaderboard
         const me = data.leaderboard?.find(entry => entry.id === socket.id);
         if (me) {
-          // Smoothly update score in playerData
-          // Note: parent holds playerData; we update via shallow state in this component where possible
-          playerData.score = me.score; // safe local mutation for rendering
+          setCurrentPlayerSpeed(me.speed);
+          setCurrentPlayerMorale(me.morale);
+          setCurrentPlayerScore(me.score);
         }
       });
 
       socket.on('race_finished', (data) => {
-        onGameOver();
+        // Khi cuộc đua kết thúc, chuyển sang màn hình kết quả kèm BXH cuối
+        onGameOver(data?.finalStandings);
+      });
+
+      socket.on('shop_opened', (data) => {
+        if (!shopLocked) {
+          setShopOpen(true);
+          setShopTimeLeft(data.timeLimit);
+          setShopItems(data.shopItems || []);
+        } else {
+          console.log('Shop is locked, cannot open');
+        }
+      });
+
+      socket.on('close_shop', () => {
+        setShopOpen(false);
+      });
+
+      socket.on('global_notification', (data) => {
+        const id = Date.now();
+        setNotifications(prev => [...prev, { ...data, id }]);
+        setTimeout(() => {
+          setNotifications(prev => prev.filter(n => n.id !== id));
+        }, 4000);
+      });
+
+      socket.on('treasure_opened', (data) => {
+        setTreasureModal(data.treasure);
+        setTimeout(() => {
+          setTreasureModal(null);
+        }, 3000);
+      });
+
+      socket.on('need_target', (data) => {
+        const visiblePlayers = leaderboard
+          .filter(p => {
+            const myScore = leaderboard.find(pl => pl.id === socket?.id)?.score || 0;
+            return p.id !== socket?.id && Math.abs(p.score - myScore) <= 50;
+          })
+          .sort((a, b) => b.score - a.score); // ưu tiên người nhiều điểm nhất
+        
+        setTargetTimeLeft(5);
+        setTargetSelectionModal({
+          itemId: data.itemId,
+          itemName: data.itemName,
+          targets: visiblePlayers
+        });
+      });
+
+      socket.on('item_purchased', (data) => {
+        setInventory(data.inventory);
+        playerData.score = data.newScore;
+      });
+
+      socket.on('player_bought_item', (data) => {
+        console.log(`${data.playerName} vừa mua ${data.itemIcon} ${data.itemName}`);
+      });
+
+      socket.on('shop_unlocked', () => {
+        setShopLocked(false);
+      });
+
+      socket.on('answer_result', (data) => {
+        // Nếu trả lời sai, khóa ô câu hỏi 3s (chỉ cho người chơi đó)
+        if (data.playerId === socket.id) {
+          setCurrentPlayerSpeed(data.speed);
+          setCurrentPlayerMorale(data.morale);
+          if (!data.isCorrect && !data.isTimeout) {
+            setQuestionLocked(true);
+            setTimeout(() => {
+              setQuestionLocked(false);
+            }, 3000);
+          }
+        }
       });
 
       return () => {
         socket.off('race_started');
         socket.off('race_leaderboard_update');
         socket.off('race_finished');
+        socket.off('shop_opened');
+        socket.off('close_shop');
+        socket.off('global_notification');
+        socket.off('treasure_opened');
+        socket.off('need_target');
+        socket.off('item_purchased');
+        socket.off('player_bought_item');
+        socket.off('shop_unlocked');
+        socket.off('answer_result');
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -66,20 +160,49 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
     }
   }, [currentObstacle, questionTimeLimit, answered]);
 
-  // Smoothly animate displayed percent towards actual percent (fake loading effect)
+  // Đếm ngược chọn mục tiêu cho tên lửa, auto chọn người điểm cao nhất sau 5s
   useEffect(() => {
-    const actualPercent = Math.min(100, (playerData.score / targetScore) * 100);
-    const anim = setInterval(() => {
-      setDisplayPercent(prev => {
-        const diff = actualPercent - prev;
-        if (Math.abs(diff) < 0.5) return actualPercent; // snap when close
-        return prev + diff * 0.2; // ease towards target
-      });
-    }, 100);
-    return () => clearInterval(anim);
-  }, [playerData.score, targetScore]);
+    if (!targetSelectionModal) return;
 
-  // Removed position auto-updates; scoring handled server-side
+    setTargetTimeLeft(5);
+    const countdown = setInterval(() => {
+      setTargetTimeLeft(prev => Math.max(0, prev - 1));
+    }, 1000);
+
+    const autoSelect = setTimeout(() => {
+      const autoTarget = targetSelectionModal.targets?.[0];
+      if (autoTarget) {
+        socket?.emit('buy_item', {
+          roomId,
+          itemId: targetSelectionModal.itemId,
+          targetPlayerId: autoTarget.id
+        });
+      }
+      setTargetSelectionModal(null);
+    }, 5000);
+
+    return () => {
+      clearInterval(countdown);
+      clearTimeout(autoSelect);
+    };
+  }, [targetSelectionModal, roomId, socket]);
+
+  // Shop countdown timer
+  useEffect(() => {
+    if (!shopOpen || shopTimeLeft <= 0) return;
+    
+    const timer = setInterval(() => {
+      setShopTimeLeft(prev => {
+        if (prev <= 1) {
+          setShopOpen(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [shopOpen, shopTimeLeft]);
 
   const handleAnswer = (optionIndex) => {
     if (!answered && currentObstacle) {
@@ -99,15 +222,15 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
         </div>
         <div className="stat-box">
           <span className="stat-label">💪 Đạo đức Cách mạng:</span>
-          <span className="stat-value">{playerData.morale}%</span>
+          <span className="stat-value">{currentPlayerMorale}%</span>
         </div>
         <div className="stat-box">
           <span className="stat-label">🚀 Tốc độ:</span>
-          <span className="stat-value">{playerData.speed.toFixed(2)}x</span>
+          <span className="stat-value">{currentPlayerSpeed.toFixed(2)}x</span>
         </div>
         <div className="stat-box">
           <span className="stat-label">🏁 Điểm:</span>
-          <span className="stat-value">{Math.round(playerData.score)} / {targetScore}</span>
+          <span className="stat-value">{Math.round(currentPlayerScore)}</span>
         </div>
       </div>
 
@@ -129,47 +252,60 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
           <div className="wave wave-3"></div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="progress-bar-container">
-          {(() => {
-            const percent = Math.min(100, Math.round(displayPercent));
-            return (
-              <>
-                <div className="progress-bar-fill" style={{ width: `${percent}%` }}></div>
-                <span className="progress-text">{percent}%</span>
-              </>
-            );
-          })()}
-        </div>
-
-        {/* Finish line reveals from right to left when 90%+ */}
-        <div className={`finish-line ${displayPercent >= 90 ? 'reveal' : ''}`}></div>
-
         {/* All Players' Boats */}
-        {leaderboard.map((player, index) => {
-          const playerPercent = Math.min(100, (player.score / targetScore) * 100);
-          const isCurrentPlayer = player.id === socket?.id;
-          
-          return (
-            <div 
-              key={player.id}
-              className={`boat-container ${isCurrentPlayer ? 'current-player' : ''}`}
-              style={{ 
-                left: `${Math.min(100, playerPercent)}%`,
-                top: `${30 + (index * 15)}%`
-              }}
-            >
-              <div className="player-name">{player.name}</div>
-              <div className="boat">⛵</div>
-              <div className="morale-bar">
-                <div 
-                  className="morale-fill"
-                  style={{ width: `${player.morale || 100}%` }}
-                ></div>
+        {(() => {
+          const myScore = leaderboard.find(p => p.id === socket?.id)?.score || 0;
+          const visiblePlayers = leaderboard.filter(p => {
+            const isCurrentPlayer = p.id === socket?.id;
+            if (!isCurrentPlayer && Math.abs(p.score - myScore) > 50) return false;
+            return true;
+          });
+
+          // Tính khoảng cách dọc dựa trên số thuyền để tránh bị che
+          const baseTop = 10; // bắt đầu cao hơn
+          const maxSpread = 60; // tổng chiều cao phân bổ
+          const step = visiblePlayers.length > 1 ? Math.min(12, maxSpread / (visiblePlayers.length - 1)) : 0;
+
+          return visiblePlayers.map((player, index) => {
+            const isCurrentPlayer = player.id === socket?.id;
+
+            let position;
+            const threshold = 25; // Điểm để đạt giữa màn hình
+            
+            if (myScore < threshold) {
+              position = (player.score / threshold) * 50;
+            } else {
+              if (isCurrentPlayer) {
+                position = 50;
+              } else {
+                const scoreDiff = player.score - myScore;
+                position = 50 + (scoreDiff / 50) * 50;
+              }
+            }
+
+            const topPos = baseTop + index * step;
+
+            return (
+              <div 
+                key={player.id}
+                className={`boat-container ${isCurrentPlayer ? 'current-player' : ''}`}
+                style={{ 
+                  left: `${position}%`,
+                  top: `${topPos}%`
+                }}
+              >
+                <div className="player-name">{player.name}</div>
+                <div className="boat">⛵</div>
+                <div className="morale-bar">
+                  <div 
+                    className="morale-fill"
+                    style={{ width: `${player.morale || 100}%` }}
+                  ></div>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          });
+        })()}
 
         {/* Obstacles on River
         {currentObstacle && (
@@ -184,7 +320,12 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
 
       {/* Question Section */}
       {currentObstacle && (
-        <div className="question-section">
+        <div className={`question-section ${questionLocked ? 'question-locked' : ''}`}>
+          {questionLocked && (
+            <div className="question-locked-overlay">
+              <div className="locked-message">⏳ Bị khóa 3s do trả lời sai</div>
+            </div>
+          )}
           <div className="question-header">
             <h3 className="question-text">{currentObstacle.question.question}</h3>
             <div className="time-display">
@@ -223,6 +364,168 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
       {currentObstacle && (
         <div className="category-tag">
           📚 {currentObstacle.question.category}
+        </div>
+      )}
+
+      {/* Shop Modal */}
+      {shopOpen && (
+        <div className="shop-modal-overlay">
+          <div className="shop-modal">
+            <div className="shop-header">
+              <h2>🏪 Cửa hàng vật phẩm</h2>
+              <span className="shop-timer">
+                ⏱️ {shopTimeLeft}s
+              </span>
+            </div>
+
+            <div className="shop-grid">
+              {shopItems.map(item => (
+                <button
+                  key={item.id}
+                  className="shop-item-card"
+                  onClick={() => {
+                    if (currentPlayerScore >= item.cost) {
+                      socket?.emit('buy_item', {
+                        roomId,
+                        itemId: item.id
+                      });
+                    }
+                  }}
+                  disabled={currentPlayerScore < item.cost || shopLocked}
+                >
+                  <div className="item-icon">{item.icon}</div>
+                  <div className="item-name">{item.name}</div>
+                  <div className="item-cost">
+                    💰 {item.cost} điểm
+                  </div>
+                  <div className="item-description">
+                    {item.description}
+                  </div>
+                  {currentPlayerScore < item.cost && (
+                    <div className="insufficient-score">
+                      Không đủ điểm
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Inventory */}
+            {inventory.length > 0 && (
+              <div className="inventory-section">
+                <h3>📦 Hành trang</h3>
+                <div className="inventory-grid">
+                  {inventory.map((item, idx) => (
+                    <button
+                      key={idx}
+                      className="inventory-item"
+                      onClick={() => {
+                        socket?.emit('use_item', {
+                          roomId,
+                          inventoryIndex: idx
+                        });
+                      }}
+                    >
+                      <div className="item-icon">{item.icon}</div>
+                      <div className="item-name">{item.name}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {shopLocked && (
+              <div className="shop-locked-warning">
+                🔐 Shop đã bị khóa
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Notifications */}
+      <div className="notifications-container">
+        {notifications.map(notif => (
+          <div key={notif.id} className={`notification notification-${notif.type}`}>
+            {notif.message}
+          </div>
+        ))}
+      </div>
+
+      {/* Treasure Modal */}
+      {treasureModal && (
+        <div className="shop-modal-overlay">
+          <div className="treasure-modal">
+            <h2>🎁 Rương báu!</h2>
+            <div className="treasure-content">
+              {treasureModal.type === 'positive' ? (
+                <>
+                  <div className="treasure-icon">✨</div>
+                  <p className="treasure-message">Bạn nhận được: {treasureModal.content.name}</p>
+                  <p className="treasure-description">{treasureModal.content.description}</p>
+                </>
+              ) : (
+                <>
+                  <div className="treasure-icon">💀</div>
+                  <p className="treasure-message danger">{treasureModal.content.name}</p>
+                  <p className="treasure-description">{treasureModal.content.description}</p>
+                  
+                  {/* Chi tiết hiệu ứng */}
+                  <div className="treasure-effects">
+                    {treasureModal.content.effect.resetSpeed && (
+                      <div className="effect-item">
+                        ⚡ Tốc độ reset về 0.1
+                      </div>
+                    )}
+                    {treasureModal.content.effect.scorePenalty && (
+                      <div className="effect-item">
+                        💔 Mất {treasureModal.content.effect.scorePenalty} điểm
+                      </div>
+                    )}
+                    {treasureModal.content.effect.lockShop && (
+                      <div className="effect-item">
+                        🔐 Shop bị khóa {treasureModal.content.duration / 1000}s
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Target Selection Panel (right side) */}
+      {targetSelectionModal && (
+        <div className="target-panel">
+          <div className="target-panel-header">
+            <div className="target-title">🎯 Chọn mục tiêu cho {targetSelectionModal.itemName}</div>
+            <div className="target-countdown">⏱️ {targetTimeLeft}s</div>
+          </div>
+
+          <div className="target-panel-list">
+            {targetSelectionModal.targets.map(target => (
+              <button
+                key={target.id}
+                className="target-panel-item"
+                onClick={() => {
+                  socket?.emit('buy_item', {
+                    roomId,
+                    itemId: targetSelectionModal.itemId,
+                    targetPlayerId: target.id
+                  });
+                  setTargetSelectionModal(null);
+                }}
+              >
+                <div className="target-panel-name">⛵ {target.name}</div>
+                <div className="target-panel-score">🏁 {Math.round(target.score)} điểm</div>
+              </button>
+            ))}
+          </div>
+
+          <div className="target-panel-footer">
+            Nếu không chọn, sẽ tự động bắn người nhiều điểm nhất trong {targetTimeLeft}s
+          </div>
         </div>
       )}
     </div>
