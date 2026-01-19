@@ -42,6 +42,8 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
           setShopOpen(true);
           setShopTimeLeft(data.timeLimit);
           setShopItems(data.shopItems || []);
+        } else {
+          console.log('Shop is locked, cannot open');
         }
       });
 
@@ -167,18 +169,19 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
 
   // Shop countdown timer
   useEffect(() => {
-    if (shopOpen && shopTimeLeft > 0) {
-      const timer = setInterval(() => {
-        setShopTimeLeft(prev => {
-          if (prev <= 1) {
-            setShopOpen(false);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
+    if (!shopOpen || shopTimeLeft <= 0) return;
+    
+    const timer = setInterval(() => {
+      setShopTimeLeft(prev => {
+        if (prev <= 1) {
+          setShopOpen(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
   }, [shopOpen, shopTimeLeft]);
 
   const handleAnswer = (optionIndex) => {
