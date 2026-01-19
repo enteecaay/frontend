@@ -1,0 +1,230 @@
+.ideology-container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 30px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.8;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  color: #fff;
+  backdrop-filter: blur(12px);
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding-bottom: 50px;
+}
+
+.back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background 0.3s ease;
+  z-index: 10;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.ideology-container h1 {
+  text-align: center;
+  color: #fff;
+  margin-bottom: 40px;
+  margin-top: 20px;
+  font-size: 2.5em;
+  font-weight: 700;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.quote-section {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.2) 0%,
+    rgba(255, 165, 0, 0.2) 100%
+  );
+  border-left: 5px solid #ffd700;
+  padding: 25px;
+  margin-bottom: 30px;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.main-quote {
+  font-size: 1.6em;
+  font-style: italic;
+  color: #ffebcd;
+  margin: 0;
+  text-align: center;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.ideology-content section {
+  background: rgba(255, 255, 255, 0.1);
+  margin-bottom: 30px;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.ideology-content section:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+.ideology-content h2 {
+  color: #ffebcd;
+  border-bottom: 3px solid #ffcc00;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  font-size: 1.7em;
+  font-weight: 600;
+}
+
+.ideology-content h3 {
+  color: #ffe4b5;
+  font-size: 1.3em;
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+
+.ideology-content p {
+  margin-bottom: 15px;
+  line-height: 1.8;
+  color: #fff;
+}
+
+.ideology-content ul {
+  margin-left: 25px;
+  margin-bottom: 20px;
+}
+
+.ideology-content li {
+  margin-bottom: 12px;
+  line-height: 1.7;
+  color: #fff;
+}
+
+.ideology-content em {
+  color: #ffe4b5;
+  font-style: italic;
+}
+
+.ideology-content strong {
+  color: #ffebcd;
+  font-weight: 600;
+}
+
+.sub-section {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  border-left: 4px solid #ffcc00;
+}
+
+.highlight {
+  background: rgba(255, 215, 0, 0.2);
+  padding: 15px;
+  border-radius: 8px;
+  font-style: italic;
+  color: #ffebcd;
+  margin: 15px 0;
+  border-left: 4px solid #ffd700;
+  line-height: 1.7;
+}
+
+.important-note {
+  background: rgba(255, 165, 0, 0.15);
+  padding: 15px;
+  border-radius: 8px;
+  color: #ffe4b5;
+  font-weight: 500;
+  margin: 15px 0;
+  border-left: 4px solid #ff8c00;
+}
+
+.conclusion {
+  background: rgba(255, 140, 0, 0.15);
+  padding: 15px;
+  border-radius: 8px;
+  color: #ffebcd;
+  font-weight: 500;
+  margin: 15px 0;
+  border-left: 4px solid #ff6347;
+}
+
+.final-note {
+  background: rgba(220, 20, 60, 0.15);
+  padding: 20px;
+  border-radius: 8px;
+  color: #ffebcd;
+  font-style: italic;
+  margin-top: 20px;
+  border-left: 4px solid #dc143c;
+  line-height: 1.7;
+}
+
+/* Scrollbar styling */
+.ideology-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.ideology-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.ideology-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.5);
+  border-radius: 10px;
+}
+
+.ideology-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 215, 0, 0.8);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .ideology-container {
+    max-width: 95%;
+    padding: 20px;
+    margin: 10px auto;
+  }
+
+  .ideology-container h1 {
+    font-size: 1.8em;
+    margin-bottom: 25px;
+  }
+
+  .ideology-content h2 {
+    font-size: 1.4em;
+  }
+
+  .ideology-content h3 {
+    font-size: 1.1em;
+  }
+
+  .main-quote {
+    font-size: 1.3em;
+  }
+
+  .back-button {
+    top: 10px;
+    left: 10px;
+    padding: 8px 12px;
+    font-size: 0.9em;
+  }
+}
