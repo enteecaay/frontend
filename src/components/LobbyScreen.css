@@ -85,6 +85,33 @@
   font-size: 1.05em;
 }
 
+.player-guide {
+  background: rgba(16, 185, 129, 0.08);
+  border: 2px solid #10b981;
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 30px;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+}
+
+.player-guide h3 {
+  color: #a7f3d0;
+  margin-bottom: 12px;
+  font-size: 1.15em;
+}
+
+.player-guide ol {
+  margin-left: 18px;
+  color: #e0f2fe;
+  line-height: 1.5;
+  display: grid;
+  gap: 8px;
+}
+
+.player-guide li {
+  font-size: 1em;
+}
+
 .join-section,
 .wait-section {
   display: flex;

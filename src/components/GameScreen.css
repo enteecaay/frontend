@@ -267,9 +267,42 @@
   border-radius: 15px;
   padding: 25px;
   box-shadow: 0 0 25px rgba(251, 191, 36, 0.5);
-  min-height: 420px;            /* giữ kích thước ổn định giữa các câu */
+  min-height: 420px;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+.question-section.question-locked {
+  pointer-events: none;
+  animation: shake 0.5s ease-in-out;
+  filter: blur(1px) brightness(0.5);
+}
+
+.question-locked-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.locked-message {
+  padding: 14px 18px;
+  background: rgba(239, 68, 68, 1);
+  border: 2px solid #fca5a5;
+  border-radius: 10px;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
 }
 
 .question-header {

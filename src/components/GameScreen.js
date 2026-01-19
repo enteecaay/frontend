@@ -14,6 +14,10 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
   const [treasureModal, setTreasureModal] = useState(null);
   const [targetSelectionModal, setTargetSelectionModal] = useState(null);
   const [targetTimeLeft, setTargetTimeLeft] = useState(0);
+  const [questionLocked, setQuestionLocked] = useState(false);
+  const [currentPlayerSpeed, setCurrentPlayerSpeed] = useState(playerData?.speed || 0.1);
+  const [currentPlayerMorale, setCurrentPlayerMorale] = useState(playerData?.morale || 100);
+  const [currentPlayerScore, setCurrentPlayerScore] = useState(playerData?.score || 0);
 
   useEffect(() => {
     if (socket) {
@@ -24,17 +28,18 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
 
       socket.on('race_leaderboard_update', (data) => {
         setLeaderboard(data.leaderboard || []);
-        // Update local player's score each tick to reflect server scoring (points/sec = speed)
+        // Update local player's speed, morale, and score from leaderboard
         const me = data.leaderboard?.find(entry => entry.id === socket.id);
         if (me) {
-          // Smoothly update score in playerData
-          // Note: parent holds playerData; we update via shallow state in this component where possible
-          playerData.score = me.score; // safe local mutation for rendering
+          setCurrentPlayerSpeed(me.speed);
+          setCurrentPlayerMorale(me.morale);
+          setCurrentPlayerScore(me.score);
         }
       });
 
       socket.on('race_finished', (data) => {
-        onGameOver();
+        // Khi cuộc đua kết thúc, chuyển sang màn hình kết quả kèm BXH cuối
+        onGameOver(data?.finalStandings);
       });
 
       socket.on('shop_opened', (data) => {
@@ -95,6 +100,20 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
         setShopLocked(false);
       });
 
+      socket.on('answer_result', (data) => {
+        // Nếu trả lời sai, khóa ô câu hỏi 3s (chỉ cho người chơi đó)
+        if (data.playerId === socket.id) {
+          setCurrentPlayerSpeed(data.speed);
+          setCurrentPlayerMorale(data.morale);
+          if (!data.isCorrect && !data.isTimeout) {
+            setQuestionLocked(true);
+            setTimeout(() => {
+              setQuestionLocked(false);
+            }, 3000);
+          }
+        }
+      });
+
       return () => {
         socket.off('race_started');
         socket.off('race_leaderboard_update');
@@ -107,6 +126,7 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
         socket.off('item_purchased');
         socket.off('player_bought_item');
         socket.off('shop_unlocked');
+        socket.off('answer_result');
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -202,15 +222,15 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
         </div>
         <div className="stat-box">
           <span className="stat-label">💪 Đạo đức Cách mạng:</span>
-          <span className="stat-value">{playerData.morale}%</span>
+          <span className="stat-value">{currentPlayerMorale}%</span>
         </div>
         <div className="stat-box">
           <span className="stat-label">🚀 Tốc độ:</span>
-          <span className="stat-value">{playerData.speed.toFixed(2)}x</span>
+          <span className="stat-value">{currentPlayerSpeed.toFixed(2)}x</span>
         </div>
         <div className="stat-box">
           <span className="stat-label">🏁 Điểm:</span>
-          <span className="stat-value">{Math.round(playerData.score)}</span>
+          <span className="stat-value">{Math.round(currentPlayerScore)}</span>
         </div>
       </div>
 
@@ -233,52 +253,59 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
         </div>
 
         {/* All Players' Boats */}
-        {leaderboard.map((player, index) => {
-          const isCurrentPlayer = player.id === socket?.id;
+        {(() => {
           const myScore = leaderboard.find(p => p.id === socket?.id)?.score || 0;
-          
-          // Chỉ hiển thị nếu là bản thân hoặc chênh lệch dưới 50 điểm
-          if (!isCurrentPlayer && Math.abs(player.score - myScore) > 50) {
-            return null;
-          }
-          
-          let position;
-          const threshold = 25; // Điểm để đạt giữa màn hình
-          
-          if (myScore < threshold) {
-            // Giai đoạn đầu: tất cả thuyền di chuyển từ trái dựa trên điểm tuyệt đối
-            position = (player.score / threshold) * 50;
-          } else {
-            // Sau khi thuyền tôi đạt giữa màn hình
-            if (isCurrentPlayer) {
-              position = 50; // Khóa ở giữa
+          const visiblePlayers = leaderboard.filter(p => {
+            const isCurrentPlayer = p.id === socket?.id;
+            if (!isCurrentPlayer && Math.abs(p.score - myScore) > 50) return false;
+            return true;
+          });
+
+          // Tính khoảng cách dọc dựa trên số thuyền để tránh bị che
+          const baseTop = 10; // bắt đầu cao hơn
+          const maxSpread = 60; // tổng chiều cao phân bổ
+          const step = visiblePlayers.length > 1 ? Math.min(12, maxSpread / (visiblePlayers.length - 1)) : 0;
+
+          return visiblePlayers.map((player, index) => {
+            const isCurrentPlayer = player.id === socket?.id;
+
+            let position;
+            const threshold = 25; // Điểm để đạt giữa màn hình
+            
+            if (myScore < threshold) {
+              position = (player.score / threshold) * 50;
             } else {
-              // Thuyền khác: vị trí tương đối
-              const scoreDiff = player.score - myScore;
-              position = 50 + (scoreDiff / 50) * 50;
+              if (isCurrentPlayer) {
+                position = 50;
+              } else {
+                const scoreDiff = player.score - myScore;
+                position = 50 + (scoreDiff / 50) * 50;
+              }
             }
-          }
-          
-          return (
-            <div 
-              key={player.id}
-              className={`boat-container ${isCurrentPlayer ? 'current-player' : ''}`}
-              style={{ 
-                left: `${position}%`,
-                top: `${30 + (index * 15)}%`
-              }}
-            >
-              <div className="player-name">{player.name}</div>
-              <div className="boat">⛵</div>
-              <div className="morale-bar">
-                <div 
-                  className="morale-fill"
-                  style={{ width: `${player.morale || 100}%` }}
-                ></div>
+
+            const topPos = baseTop + index * step;
+
+            return (
+              <div 
+                key={player.id}
+                className={`boat-container ${isCurrentPlayer ? 'current-player' : ''}`}
+                style={{ 
+                  left: `${position}%`,
+                  top: `${topPos}%`
+                }}
+              >
+                <div className="player-name">{player.name}</div>
+                <div className="boat">⛵</div>
+                <div className="morale-bar">
+                  <div 
+                    className="morale-fill"
+                    style={{ width: `${player.morale || 100}%` }}
+                  ></div>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          });
+        })()}
 
         {/* Obstacles on River
         {currentObstacle && (
@@ -293,7 +320,12 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
 
       {/* Question Section */}
       {currentObstacle && (
-        <div className="question-section">
+        <div className={`question-section ${questionLocked ? 'question-locked' : ''}`}>
+          {questionLocked && (
+            <div className="question-locked-overlay">
+              <div className="locked-message">⏳ Bị khóa 3s do trả lời sai</div>
+            </div>
+          )}
           <div className="question-header">
             <h3 className="question-text">{currentObstacle.question.question}</h3>
             <div className="time-display">
@@ -352,14 +384,14 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
                   key={item.id}
                   className="shop-item-card"
                   onClick={() => {
-                    if (playerData.score >= item.cost) {
+                    if (currentPlayerScore >= item.cost) {
                       socket?.emit('buy_item', {
                         roomId,
                         itemId: item.id
                       });
                     }
                   }}
-                  disabled={playerData.score < item.cost || shopLocked}
+                  disabled={currentPlayerScore < item.cost || shopLocked}
                 >
                   <div className="item-icon">{item.icon}</div>
                   <div className="item-name">{item.name}</div>
@@ -369,7 +401,7 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
                   <div className="item-description">
                     {item.description}
                   </div>
-                  {playerData.score < item.cost && (
+                  {currentPlayerScore < item.cost && (
                     <div className="insufficient-score">
                       Không đủ điểm
                     </div>

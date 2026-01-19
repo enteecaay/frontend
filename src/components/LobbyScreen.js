@@ -64,6 +64,16 @@ function LobbyScreen({
               </p>
             </div>
 
+            <div className="player-guide">
+              <h3>🧭 HƯỚNG DẪN NHANH:</h3>
+              <ol>
+                <li>Nhập tên, chọn cuộc đua và bấm "Tham gia".</li>
+                <li>Chờ admin bấm bắt đầu để vào đường đua.</li>
+                <li>Trả lời nhanh: đúng sẽ tăng tốc; sai sẽ giảm tốc và bị khóa câu hỏi 3s.</li>
+                <li>Về đích sớm nhất để trở thành người cầm lái xuất sắc.</li>
+              </ol>
+            </div>
+
             <div className="join-section">
               <div className="form-group">
                 <label>Tên Người Chơi:</label>

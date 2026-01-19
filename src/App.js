@@ -186,7 +186,10 @@ function AppContent() {
     }
   };
 
-  const handleGameOver = () => {
+  const handleGameOver = (finalStandings) => {
+    if (finalStandings && finalStandings.length) {
+      setPlayerData((prev) => (prev ? { ...prev, finalStandings } : prev));
+    }
     setScreenState("gameOver");
   };
 
