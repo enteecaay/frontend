@@ -9,7 +9,6 @@ import AdminScreen from './components/AdminScreen';
 import LobbyScreen from './components/LobbyScreen';
 import GameScreen from './components/GameScreen';
 import GameOverScreen from './components/GameOverScreen';
-import PartyIdeology from './components/PartyIdeology';
 
 function AppContent() {
   const [socket, setSocket] = useState(null);
@@ -208,8 +207,6 @@ function AppContent() {
           </>
         } />
 
-        {/* Party Ideology Route */}
-        <Route path="/ideology" element={<PartyIdeology />} />
 
         {/* Game Route */}
         <Route path="/game" element={
