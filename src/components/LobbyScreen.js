@@ -128,20 +128,6 @@ function LobbyScreen({
                 THAM GIA CUỘC ĐUA
               </button>
             </div>
-
-            <div className="game-rules">
-              <h3>📖 CÁC QUY TẮC:</h3>
-              <ul>
-                <li>✅ Trả lời đúng = Thuyền tăng tốc độ</li>
-                <li>❌ Trả lời sai = Thuyền giảm tốc độ</li>
-                <li>🏁 Người về đích đầu tiên sẽ thắng</li>
-                <li>
-                  ⛈️ Tránh các chướng ngại vật: Tham ô, Quan liêu, Xa rời quần
-                  chúng
-                </li>
-                <li>✨ Cần, Kiệm, Liêm, Chính, Đoàn kết (các phẩm chất)</li>
-              </ul>
-            </div>
           </>
         ) : (
           <div className="wait-section">
@@ -165,17 +151,6 @@ function LobbyScreen({
             </p>
           </div>
         )}
-        <div className="ai-usage-button">
-          <button className="btn btn-secondary" onClick={onShowAIUsage}>
-            📊 AI Usage
-          </button>
-          <button
-            className="btn btn-secondary"
-            onClick={onShowVietnameseIdeology}
-          >
-            🏛️ Tư Tưởng HCM
-          </button>
-        </div>
       </div>
 
       <div className="lobby-decoration">

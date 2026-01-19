@@ -35,10 +35,10 @@ function Navbar() {
           </li>
           <li>
             <Link 
-              to="/admin" 
-              className={`nav-link ${isActive('/admin') ? 'active' : ''}`}
+              to="/ai-usage" 
+              className={`nav-link ${isActive('/ai-usage') ? 'active' : ''}`}
             >
-              Admin
+              AI Usage
             </Link>
           </li>
         </ul>

@@ -8,14 +8,13 @@ const AIUsageScreen = ({ onBack }) => {
 
   return (
     <div className="ai-usage-container">
-      <button className="back-button" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); onBack(); }}>⬅️ Quay lại Lobby</button>
       <h1>AI Usage</h1>
       <div className="ai-usage-content">
         <section>
           <h2>PHẦN 1. AI USAGE – ỨNG DỤNG AI TRONG BÀI LÀM</h2>
           <div className="sub-section">
             <h3>1.1. Soạn quiz dựa trên nội dung nhóm soạn (ChatGPT)</h3>
-            <p><strong>Công cụ sử dụng:</strong> ChatGPT (OpenAI)</p>
+            <p><strong>Công cụ sử dụng:</strong> ChatGPT (OpenAI), NotebookLM</p>
             <p><strong>Mục đích sử dụng:</strong> Hỗ trợ tạo câu hỏi trắc nghiệm và câu hỏi ôn tập nhằm củng cố nội dung lý luận về vai trò của Đảng Cộng sản Việt Nam và giúp người học tự đánh giá mức độ hiểu bài. AI không tự tạo nội dung lý luận, mà chỉ dựa trên nội dung do Nhóm đã biên soạn.</p>
             <p><strong>Quy trình sử dụng AI:</strong></p>
             <ul>

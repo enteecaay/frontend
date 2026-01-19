@@ -10,7 +10,6 @@ import LobbyScreen from './components/LobbyScreen';
 import GameScreen from './components/GameScreen';
 import GameOverScreen from './components/GameOverScreen';
 import AIUsageScreen from "./components/AIUsageScreen";
-import VietnameseIdeologyScreen from "./components/VietnameseIdeologyScreen";
 
 function AppContent() {
   const [socket, setSocket] = useState(null);
@@ -169,19 +168,6 @@ function AppContent() {
     }
   };
 
-  const handleShowAIUsage = () => {
-    setScreenState("ai-usage");
-  };
-
-  const handleShowVietnameseIdeology = () => {
-    setScreenState("vietnamese-ideology");
-  };
-
-  const handleBackToLobby = () => {
-    setScreenState("lobby");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   const handleAnswerQuestion = (questionId, answer, isTimeout = false) => {
     if (socket) {
       socket.emit("answer_question", { roomId, questionId, answer, isTimeout });
@@ -210,6 +196,9 @@ function AppContent() {
       <Routes>
         {/* Home Route */}
         <Route path="/" element={<HomeScreen />} />
+
+        {/* AI Usage Route */}
+        <Route path="/ai-usage" element={<AIUsageScreen />} />
 
         {/* Admin Route */}
         <Route
