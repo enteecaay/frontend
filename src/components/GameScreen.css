@@ -267,6 +267,9 @@
   border-radius: 15px;
   padding: 25px;
   box-shadow: 0 0 25px rgba(251, 191, 36, 0.5);
+  min-height: 420px;            /* giữ kích thước ổn định giữa các câu */
+  display: flex;
+  flex-direction: column;
 }
 
 .question-header {
@@ -326,6 +329,7 @@
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 15px;
   margin-bottom: 20px;
+  min-height: 180px;            /* hạn chế nhảy layout khi số dòng đáp án thay đổi */
 }
 
 .option-button {
@@ -876,6 +880,87 @@
 .cancel-target-btn:hover {
   background: rgba(220, 38, 38, 1);
   transform: scale(1.02);
+}
+
+/* Target Selection Panel (right side) */
+.target-panel {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  width: 320px;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  z-index: 9000;
+  color: #e2e8f0;
+}
+
+.target-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.target-title {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.target-countdown {
+  padding: 6px 10px;
+  background: rgba(248, 113, 113, 0.2);
+  border: 1px solid rgba(248, 113, 113, 0.6);
+  border-radius: 8px;
+  font-weight: 700;
+  color: #fecdd3;
+}
+
+.target-panel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.target-panel-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.target-panel-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateX(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.target-panel-name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.target-panel-score {
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+.target-panel-footer {
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: #cbd5e1;
 }
 
 @keyframes fadeIn {

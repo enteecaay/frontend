@@ -13,6 +13,7 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
   const [notifications, setNotifications] = useState([]);
   const [treasureModal, setTreasureModal] = useState(null);
   const [targetSelectionModal, setTargetSelectionModal] = useState(null);
+  const [targetTimeLeft, setTargetTimeLeft] = useState(0);
 
   useEffect(() => {
     if (socket) {
@@ -64,11 +65,14 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
       });
 
       socket.on('need_target', (data) => {
-        const visiblePlayers = leaderboard.filter(p => {
-          const myScore = leaderboard.find(pl => pl.id === socket?.id)?.score || 0;
-          return p.id !== socket?.id && Math.abs(p.score - myScore) <= 50;
-        });
+        const visiblePlayers = leaderboard
+          .filter(p => {
+            const myScore = leaderboard.find(pl => pl.id === socket?.id)?.score || 0;
+            return p.id !== socket?.id && Math.abs(p.score - myScore) <= 50;
+          })
+          .sort((a, b) => b.score - a.score); // ưu tiên người nhiều điểm nhất
         
+        setTargetTimeLeft(5);
         setTargetSelectionModal({
           itemId: data.itemId,
           itemName: data.itemName,
@@ -133,6 +137,33 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
       setTimeLeft(questionTimeLimit);
     }
   }, [currentObstacle, questionTimeLimit, answered]);
+
+  // Đếm ngược chọn mục tiêu cho tên lửa, auto chọn người điểm cao nhất sau 5s
+  useEffect(() => {
+    if (!targetSelectionModal) return;
+
+    setTargetTimeLeft(5);
+    const countdown = setInterval(() => {
+      setTargetTimeLeft(prev => Math.max(0, prev - 1));
+    }, 1000);
+
+    const autoSelect = setTimeout(() => {
+      const autoTarget = targetSelectionModal.targets?.[0];
+      if (autoTarget) {
+        socket?.emit('buy_item', {
+          roomId,
+          itemId: targetSelectionModal.itemId,
+          targetPlayerId: autoTarget.id
+        });
+      }
+      setTargetSelectionModal(null);
+    }, 5000);
+
+    return () => {
+      clearInterval(countdown);
+      clearTimeout(autoSelect);
+    };
+  }, [targetSelectionModal, roomId, socket]);
 
   // Shop countdown timer
   useEffect(() => {
@@ -429,36 +460,36 @@ function GameScreen({ playerData, currentObstacle, onAnswerQuestion, score, onGa
         </div>
       )}
 
-      {/* Target Selection Modal */}
+      {/* Target Selection Panel (right side) */}
       {targetSelectionModal && (
-        <div className="shop-modal-overlay">
-          <div className="target-selection-modal">
-            <h2>🎯 Chọn mục tiêu cho {targetSelectionModal.itemName}</h2>
-            <div className="target-grid">
-              {targetSelectionModal.targets.map(target => (
-                <button
-                  key={target.id}
-                  className="target-card"
-                  onClick={() => {
-                    socket?.emit('buy_item', {
-                      roomId,
-                      itemId: targetSelectionModal.itemId,
-                      targetPlayerId: target.id
-                    });
-                    setTargetSelectionModal(null);
-                  }}
-                >
-                  <div className="target-name">⛵ {target.name}</div>
-                  <div className="target-score">💰 {Math.round(target.score)} điểm</div>
-                </button>
-              ))}
-            </div>
-            <button 
-              className="cancel-target-btn"
-              onClick={() => setTargetSelectionModal(null)}
-            >
-              Hủy
-            </button>
+        <div className="target-panel">
+          <div className="target-panel-header">
+            <div className="target-title">🎯 Chọn mục tiêu cho {targetSelectionModal.itemName}</div>
+            <div className="target-countdown">⏱️ {targetTimeLeft}s</div>
+          </div>
+
+          <div className="target-panel-list">
+            {targetSelectionModal.targets.map(target => (
+              <button
+                key={target.id}
+                className="target-panel-item"
+                onClick={() => {
+                  socket?.emit('buy_item', {
+                    roomId,
+                    itemId: targetSelectionModal.itemId,
+                    targetPlayerId: target.id
+                  });
+                  setTargetSelectionModal(null);
+                }}
+              >
+                <div className="target-panel-name">⛵ {target.name}</div>
+                <div className="target-panel-score">🏁 {Math.round(target.score)} điểm</div>
+              </button>
+            ))}
+          </div>
+
+          <div className="target-panel-footer">
+            Nếu không chọn, sẽ tự động bắn người nhiều điểm nhất trong {targetTimeLeft}s
           </div>
         </div>
       )}
