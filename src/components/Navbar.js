@@ -13,7 +13,7 @@ function Navbar() {
     <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-brand">
-          <span className="brand-text">Vương Tay Chèo</span>
+          <span className="brand-text">Vững Tay Chèo</span>
         </div>
         
         <ul className="navbar-menu">

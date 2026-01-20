@@ -1,29 +1,31 @@
 .lobby-container {
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
-  overflow: scroll;
-  background: linear-gradient(45deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%);
+  overflow-x: hidden;
+  overflow-y: visible;
+  background: linear-gradient(135deg, #c41e1e 0%, #8b1515 50%, #5a0f0f 100%);
+  padding: 40px 20px;
 }
 
 .lobby-content {
-  background: rgba(0, 0, 0, 0.6);
-  border: 3px solid #fbbf24;
+  background: rgba(255, 255, 255, 0.92);
+  border: 2px solid #c41e1e;
   border-radius: 20px;
   padding: 60px 80px;
-  max-width: 700px;
-  width: 90%;
-  box-shadow:
-    0 0 40px rgba(251, 191, 36, 0.5),
-    inset 0 0 20px rgba(251, 191, 36, 0.1);
+  max-width: 900px;
+  width: 100%;
+  box-shadow: 0 10px 50px rgba(196, 30, 30, 0.15);
   position: relative;
   z-index: 10;
   animation: slideIn 0.8s ease-out;
-  max-height: 90vh;
-  overflow-y: auto;
+  max-height: none;
+  overflow-y: visible;
+  text-shadow: none;
 }
 
 @keyframes slideIn {
@@ -45,10 +47,8 @@
 .game-title {
   font-size: 3.5em;
   font-weight: bold;
-  text-shadow:
-    0 0 20px #fbbf24,
-    0 0 40px #f59e0b;
-  color: #fcd34d;
+  text-shadow: 0 2px 4px rgba(196, 30, 30, 0.2);
+  color: #c41e1e;
   margin-bottom: 10px;
   letter-spacing: 3px;
   animation: glow-pulse 2s ease-in-out infinite;
@@ -56,53 +56,53 @@
 
 .game-subtitle {
   font-size: 1.8em;
-  color: #fbbf24;
+  color: #a01818;
   font-style: italic;
   margin-bottom: 15px;
-  text-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+  text-shadow: none;
 }
 
 .tagline {
   font-size: 1.2em;
-  color: #fef08a;
+  color: #c41e1e;
   font-weight: bold;
   font-style: italic;
   margin-bottom: 30px;
-  text-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+  text-shadow: none;
 }
 
 .game-info {
-  background: rgba(251, 191, 36, 0.1);
-  border-left: 4px solid #fbbf24;
+  background: rgba(196, 30, 30, 0.06);
+  border-left: 4px solid #c41e1e;
   padding: 20px;
   margin-bottom: 30px;
   border-radius: 8px;
 }
 
 .info-text {
-  color: #fef08a;
+  color: #333333;
   line-height: 1.6;
   font-size: 1.05em;
 }
 
 .player-guide {
-  background: rgba(16, 185, 129, 0.08);
-  border: 2px solid #10b981;
+  background: rgba(100, 180, 150, 0.08);
+  border: 2px solid #64b496;
   border-radius: 10px;
   padding: 18px;
   margin-bottom: 30px;
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 20px rgba(100, 180, 150, 0.1);
 }
 
 .player-guide h3 {
-  color: #a7f3d0;
+  color: #4a8b6f;
   margin-bottom: 12px;
   font-size: 1.15em;
 }
 
 .player-guide ol {
   margin-left: 18px;
-  color: #e0f2fe;
+  color: #333333;
   line-height: 1.5;
   display: grid;
   gap: 8px;
@@ -127,7 +127,7 @@
 }
 
 .form-group label {
-  color: #fbbf24;
+  color: #333333;
   font-weight: bold;
   font-size: 1.05em;
 }
@@ -136,10 +136,10 @@
 .room-select {
   padding: 15px;
   font-size: 1.1em;
-  border: 2px solid #fbbf24;
+  border: 2px solid #c41e1e;
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.95);
+  color: #ffffff;
   font-family: "Courier New", monospace;
   transition: all 0.3s ease;
 }
@@ -147,13 +147,13 @@
 .player-input:focus,
 .room-select:focus {
   outline: none;
-  border-color: #fcd34d;
-  box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
-  background: rgba(0, 0, 0, 0.8);
+  border-color: #a01818;
+  box-shadow: 0 0 20px rgba(196, 30, 30, 0.2);
+  background: rgba(255, 255, 255, 1);
 }
 
 .player-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(245, 245, 245, 0.5);
 }
 
 .room-select {
@@ -166,11 +166,11 @@
 }
 
 .no-rooms-message {
-  background: rgba(220, 38, 38, 0.2);
-  border: 2px solid #dc2626;
+  background: rgba(196, 30, 30, 0.08);
+  border: 2px solid #c41e1e;
   padding: 15px;
   border-radius: 8px;
-  color: #fca5a5;
+  color: #a01818;
   text-align: center;
   font-weight: bold;
 }
@@ -195,14 +195,14 @@
 }
 
 .btn-primary {
-  background: linear-gradient(45deg, #fbbf24, #f59e0b);
-  color: #000;
-  box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+  background: linear-gradient(45deg, #c41e1e, #a01818);
+  color: #fff;
+  box-shadow: 0 5px 20px rgba(196, 30, 30, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: scale(1.08);
-  box-shadow: 0 0 40px rgba(251, 191, 36, 0.8);
+  box-shadow: 0 8px 30px rgba(196, 30, 30, 0.3);
 }
 
 .btn-primary:active:not(:disabled) {
@@ -246,25 +246,25 @@
 
 .welcome-text {
   font-size: 1.5em;
-  color: #fcd34d;
+  color: #c41e1e;
   text-align: center;
   font-weight: bold;
 }
 
 .instruction-text {
-  color: #fef08a;
+  color: #333333;
   text-align: center;
   font-size: 1.1em;
 }
 
 .waiting-message {
-  color: #a7f3d0;
+  color: #4a8b6f;
   text-align: center;
   font-size: 1.1em;
   font-weight: bold;
   padding: 15px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 2px solid #10b981;
+  background: rgba(100, 180, 150, 0.08);
+  border: 2px solid #64b496;
   border-radius: 8px;
   animation: pulse 1.5s ease-in-out infinite;
 }
@@ -280,23 +280,23 @@
 }
 
 .players-list {
-  background: rgba(251, 191, 36, 0.05);
-  border: 2px solid #fbbf24;
+  background: rgba(196, 30, 30, 0.05);
+  border: 2px solid #c41e1e;
   border-radius: 8px;
   padding: 15px;
   margin-bottom: 20px;
 }
 
 .players-list h3 {
-  color: #fbbf24;
+  color: #c41e1e;
   margin-bottom: 10px;
   font-size: 1.1em;
 }
 
 .player-item {
-  color: #fef08a;
+  color: #333333;
   padding: 8px;
-  border-bottom: 1px solid rgba(251, 191, 36, 0.3);
+  border-bottom: 1px solid rgba(196, 30, 30, 0.2);
 }
 
 .player-item:last-child {
@@ -304,29 +304,29 @@
 }
 
 .game-rules {
-  background: rgba(251, 191, 36, 0.08);
-  border: 2px solid #fbbf24;
+  background: rgba(196, 30, 30, 0.05);
+  border: 2px solid #c41e1e;
   border-radius: 8px;
   padding: 20px;
   margin-top: 30px;
 }
 
 .game-rules h3 {
-  color: #fbbf24;
+  color: #c41e1e;
   margin-bottom: 15px;
   font-size: 1.2em;
 }
 
 .game-rules ul {
   list-style: none;
-  color: #fef08a;
+  color: #333333;
 }
 
 .game-rules li {
   padding: 8px 0;
   line-height: 1.5;
   font-size: 1em;
-  border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+  border-bottom: 1px solid rgba(196, 30, 30, 0.15);
 }
 
 .game-rules li:last-child {

@@ -8,8 +8,6 @@ function LobbyScreen({
   playerData,
   socket,
   availableRooms,
-  onShowAIUsage,
-  onShowVietnameseIdeology,
 }) {
   const [playerName, setPlayerName] = useState("");
   const [joined, setJoined] = useState(false);
@@ -49,7 +47,7 @@ function LobbyScreen({
     <div className="lobby-container">
       <div className="lobby-content">
         <div className="title-section">
-          <h1 className="game-title">⛵ VỮNG TAY CHÈO ⛵</h1>
+          <h1 className="game-title">⛵ VỮNG TAY CHÈO</h1>
           <h2 className="game-subtitle">Lái Con Thuyền Cách Mạng</h2>
           <p className="tagline">"Đảng vững - Thuyền chạy"</p>
         </div>
