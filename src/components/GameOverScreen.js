@@ -23,18 +23,6 @@ function GameOverScreen({ score, playerData, onReturnToLobby }) {
           </p>
         </div>
 
-        <div className="results-section">
-          <div className="result-box">
-            <span className="result-label">🎖️ Người cầm lái:</span>
-            <span className="result-value">{playerData.name}</span>
-          </div>
-
-          <div className="result-box">
-            <span className="result-label">🏁 Điểm đạt được:</span>
-            <span className="result-value">{Math.round(playerData.score || 0)}</span>
-          </div>
-        </div>
-
         {finalStandings.length > 0 && (
           <div className="standings-section">
             <h3>🏁 Bảng Xếp Hạng Chung Cuộc</h3>
